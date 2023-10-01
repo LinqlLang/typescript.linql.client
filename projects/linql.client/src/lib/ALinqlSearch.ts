@@ -149,7 +149,7 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
     /**
      * Returns a serializable LinqlSearch
-     * @returns {LinqlSearch} which is serializable 
+     * @returns {LinqlSearch} a LinqlSearch that is serializable 
      */
     Compile(): LinqlSearch
     {
