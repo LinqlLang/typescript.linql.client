@@ -147,6 +147,15 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
         return this.Context.ToJson(this);
     }
 
+    /**
+     * Returns a serializable LinqlSearch
+     * @returns {LinqlSearch} which is serializable 
+     */
+    Compile(): LinqlSearch
+    {
+        return this.Context.Compile(this);
+    }
+
     ToListAsyncSearch()
     {
         const newSearch = this.CustomLinqlFunction<Array<T>>("ToListAsync");
@@ -304,8 +313,14 @@ export abstract class ALinqlContext implements ITypeNameProvider
 
     ToJson(Search: ALinqlSearch<any>)
     {
-        const copy: any = this.GetOptimizedSearch(Search);
-        return JSON.stringify(copy);
+        const compiled = this.Compile(Search);
+        return JSON.stringify(compiled);
+    }
+
+    Compile(Search: ALinqlSearch<any>)
+    {
+        const copy: LinqlSearch = this.GetOptimizedSearch(Search);
+        return copy;
     }
 
     GetTypeName(Type: string | GenericConstructor<any>): string
