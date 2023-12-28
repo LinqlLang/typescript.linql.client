@@ -1,4 +1,4 @@
-import * as Acorn from 'acorn';
+import { Node as AcornNode, parse } from 'acorn';
 import * as AcornWalk from 'acorn-walk';
 import * as ESTree from 'estree';
 import { AnyExpression, LinqlBinary, LinqlConstant, LinqlExpression, LinqlFunction, LinqlLambda, LinqlObject, LinqlParameter, LinqlProperty, LinqlType, LinqlUnary, ITypeNameProvider } from "linql.core";
@@ -31,16 +31,16 @@ export class LinqlParser
 {
     protected LinqlStack: Array<LinqlExpression> = new Array<LinqlExpression>();
 
-    protected ExpressionStack: Array<Acorn.Node> = new Array<Acorn.Node>();
+    protected ExpressionStack: Array<AcornNode> = new Array<AcornNode>();
 
     Root: LinqlExpression | undefined;
 
-    constructor(protected RootExpression: AnyExpression<any> | string | undefined | Acorn.Node, protected ArgumentContext: {}, protected TypeNameProvider: ITypeNameProvider)
+    constructor(protected RootExpression: AnyExpression<any> | string | undefined | AcornNode, protected ArgumentContext: {}, protected TypeNameProvider: ITypeNameProvider)
     {
         this.Visit();
     }
 
-    protected PushToStack(Expression: LinqlExpression, Node: Acorn.Node)
+    protected PushToStack(Expression: LinqlExpression, Node: AcornNode)
     {
         this.LinqlStack.push(Expression);
         this.ExpressionStack.push(Node);
@@ -80,15 +80,15 @@ export class LinqlParser
         {
             return;
         }
-        let expression: Acorn.Node | undefined;
-
-        if (this.RootExpression instanceof Acorn.Node)
+        let expression: AcornNode | undefined;
+        const rootCast = this.RootExpression as AcornNode;
+        if (rootCast?.type)
         {
-            expression = this.RootExpression;
+            expression = rootCast;
         }
         else
         {
-            let rootString: string | Acorn.Node;
+            let rootString: string | Node;
 
             if (typeof this.RootExpression === "string")
             {
@@ -98,44 +98,44 @@ export class LinqlParser
             {
                 rootString = this.RootExpression.toLocaleString();
             }
-            expression = Acorn.parse(rootString, { ecmaVersion: 'latest' });
+            expression = parse(rootString, { ecmaVersion: 'latest' });
 
         }
 
         AcornWalk.recursive(expression, this, {
-            ArrowFunctionExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            ArrowFunctionExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitLambda(Node, Callback);
             },
-            CallExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            CallExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitMethodCall(Node, Callback);
             },
-            MemberExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            MemberExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitMember(Node, Callback);
             },
-            LogicalExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            LogicalExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitBinary(Node, Callback);
             },
-            BinaryExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            BinaryExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitBinary(Node, Callback);
             },
-            UnaryExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            UnaryExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitUnary(Node, Callback);
             },
-            Identifier(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            Identifier(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitParameter(Node, Callback);
             },
-            Literal(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            Literal(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitConstant(Node, Callback);
             },
-            ThisExpression(Node: Acorn.Node, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            ThisExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitThis(Node, Callback);
             }
@@ -143,7 +143,7 @@ export class LinqlParser
         });
     }
 
-    VisitLambda(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitLambda(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const linqlLambda = new LinqlLambda();
         const lambda = Node as any as ESTree.ArrowFunctionExpression;
@@ -164,11 +164,11 @@ export class LinqlParser
             linqlLambda.Parameters.push(param);
         });
 
-        const bodyParser = new LinqlParser(lambda.body as Acorn.Node, this.ArgumentContext, this.TypeNameProvider);
+        const bodyParser = new LinqlParser(lambda.body as AcornNode, this.ArgumentContext, this.TypeNameProvider);
         linqlLambda.Body = bodyParser.Root;
     }
 
-    VisitConstant(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitConstant(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const cast = Node as any as ESTree.Literal;
         const value = cast.value;
@@ -178,7 +178,7 @@ export class LinqlParser
         this.PushToStack(constant, Node);
     }
 
-    VisitParameter(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitParameter(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.Identifier;
         const anyArg = this.ArgumentContext as any;
@@ -219,7 +219,7 @@ export class LinqlParser
     }
 
 
-    VisitThis(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitThis(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.ThisExpression;
         const anyArg = this.ArgumentContext as any;
@@ -245,7 +245,7 @@ export class LinqlParser
         this.PushToStack(expression, Node);
     }
 
-    VisitMember(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitMember(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.MemberExpression;
 
@@ -259,7 +259,7 @@ export class LinqlParser
                 break;
         }
 
-        Callback(node.object as Acorn.Node, this);
+        Callback(node.object as AcornNode, this);
         const previous = this.LinqlStack.at(-1);
 
         if (memberName)
@@ -322,7 +322,7 @@ export class LinqlParser
 
     }
 
-    VisitUnary(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitUnary(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.UnaryExpression;
         let unary: LinqlUnary | undefined;
@@ -339,7 +339,7 @@ export class LinqlParser
         {
             this.AttachToExpression(unary);
             this.PushToStack(unary, Node);
-            Callback(node.argument as Acorn.Node, this);
+            Callback(node.argument as AcornNode, this);
         }
         else
         {
@@ -347,7 +347,7 @@ export class LinqlParser
         }
     }
 
-    VisitBinary(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitBinary(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.BinaryExpression;
         let binary: LinqlBinary | undefined;
@@ -365,8 +365,8 @@ export class LinqlParser
             const left = node.left;
             const right = node.right;
 
-            const leftParser = new LinqlParser(left as Acorn.Node, this.ArgumentContext, this.TypeNameProvider);
-            const rightParser = new LinqlParser(right as Acorn.Node, this.ArgumentContext, this.TypeNameProvider);
+            const leftParser = new LinqlParser(left as AcornNode, this.ArgumentContext, this.TypeNameProvider);
+            const rightParser = new LinqlParser(right as AcornNode, this.ArgumentContext, this.TypeNameProvider);
 
             binary.Left = leftParser.Root;
             binary.Right = rightParser.Root;
@@ -413,7 +413,7 @@ export class LinqlParser
 
     }
 
-    VisitMethodCall(Node: Acorn.Node, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    VisitMethodCall(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
     {
         const node = Node as any as ESTree.CallExpression;
         const callee = node.callee as ESTree.MemberExpression;
@@ -423,13 +423,13 @@ export class LinqlParser
 
         linqlFunction.Arguments = node.arguments.map(s =>
         {
-            const parser = new LinqlParser(s as Acorn.Node, this.ArgumentContext, this.TypeNameProvider);
+            const parser = new LinqlParser(s as AcornNode, this.ArgumentContext, this.TypeNameProvider);
             return parser.Root;
         }) as Array<LinqlExpression>;
 
         if (callee.object)
         {
-            const parser = new LinqlParser(callee.object as Acorn.Node, this.ArgumentContext, this.TypeNameProvider);
+            const parser = new LinqlParser(callee.object as AcornNode, this.ArgumentContext, this.TypeNameProvider);
             functionCallee = parser.Root;
         }
 

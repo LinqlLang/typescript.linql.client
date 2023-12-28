@@ -2,8 +2,7 @@ import { LinqlSearch } from "./LinqlSearch";
 import { ALinqlContext, LinqlSearchConstructor } from "./ALinqlSearch";
 import { LinqlContext } from "./LinqlContext";
 import { TestFileLoader } from "./test/TestfileLoader";
-import { INullable } from "../../../linql.core/src/lib/Extensions/INullable";
-import { LinqlObject, LinqlType } from "linql.core";
+import { LinqlObject, LinqlType, INullable } from "linql.core";
 
 class DataModel
 {
