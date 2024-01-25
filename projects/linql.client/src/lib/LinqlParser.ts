@@ -373,7 +373,7 @@ export class LinqlParser
 
             let attachExpression: LinqlExpression = binary;
 
-            const nullableCheck = this.NullableCheck(binary.Left, binary.Right);
+            const nullableCheck = this.NullableCheck(binary, binary.Left, binary.Right);
 
             if (nullableCheck)
             {
@@ -389,7 +389,7 @@ export class LinqlParser
         }
     }
 
-    private NullableCheck(left: LinqlExpression | undefined, right: LinqlExpression | undefined)
+    private NullableCheck(binary: LinqlBinary, left: LinqlExpression | undefined, right: LinqlExpression | undefined)
     {
         let nullableCheck: LinqlExpression | undefined;
 
@@ -405,8 +405,16 @@ export class LinqlParser
         if (nullableCheck)
         {
             const lastExpression = nullableCheck.GetLastExpressionInNextChain();
-            const property = new LinqlProperty("HasValue");
+            const property: LinqlExpression = new LinqlProperty("HasValue");
             lastExpression.Next = property;
+
+            if (binary.BinaryName === "Equal")
+            {
+                const unary = new LinqlUnary("Not");
+                unary.Next = nullableCheck;
+                nullableCheck = unary;
+            }
+
             return nullableCheck;
         }
         return undefined;
