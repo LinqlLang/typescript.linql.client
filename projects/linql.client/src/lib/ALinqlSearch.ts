@@ -89,7 +89,6 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
     public Include<S>(Expression: TransformExpression<T, S> | string): this
     {
-        debugger;
         return this.CustomLinqlFunction<T>("Include", Expression) as this;
     }
 
