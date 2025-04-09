@@ -58,8 +58,7 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
     public AttachTopLevelFunction(customFunction: LinqlFunction, search: LinqlSearch)
     {
-        const firstExpression = search.Expressions?.find(r => true);
-
+        const firstExpression = search.Expressions?.find(r => !this.Context.FlattenTopLevelFunctions && true);
         if (firstExpression)
         {
             const lastExpression = firstExpression.GetLastExpressionInNextChain();
@@ -90,6 +89,7 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
     public Include<S>(Expression: TransformExpression<T, S> | string): this
     {
+        debugger;
         return this.CustomLinqlFunction<T>("Include", Expression) as this;
     }
 
@@ -292,10 +292,17 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
 export abstract class ALinqlContext implements ITypeNameProvider
 {
-    constructor(public LinqlSearchType: LinqlSearchConstructor<any>, public BaseUrl: string, public ArgumentContext: {} = {})
+    constructor(public LinqlSearchType: LinqlSearchConstructor<any>, public BaseUrl: string, public ArgumentContext: {} = {}, FlattenTopFunctions: boolean = false)
     {
-
+        this.FlattenTopLevelFunctions = FlattenTopFunctions;
     }
+
+    /**
+     * Determines whether a context should append top level functions to the Expression Array, or the .Next Property.
+     *
+     * @type {boolean}
+     */
+    public FlattenTopLevelFunctions: boolean = false;
 
     public abstract GetResult<T, TResult>(Search: ALinqlSearch<T>): Promise<TResult>;
 
