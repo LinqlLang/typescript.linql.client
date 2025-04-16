@@ -1,4 +1,4 @@
-import { AnyExpression, BooleanExpression, GenericConstructor, IGrouping, LinqlConstant, LinqlExpression, LinqlFunction, LinqlSearch, LinqlType, TransformExpression, ITypeNameProvider } from "linql.core";
+import { AnyExpression, BooleanExpression, GenericConstructor, IGrouping, LinqlConstant, LinqlExpression, LinqlFunction, LinqlSearch, LinqlType, TransformExpression, ITypeNameProvider, LinqlBinary, LinqlLambda } from "linql.core";
 // import { OrderedLinqlSearch } from "./AOrderedLinqlSearch";
 import { LinqlParser } from "./LinqlParser";
 import { constructorType } from "./LinqlConstructorType";
@@ -38,6 +38,63 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
     }
 
     abstract Copy(): this;
+
+    /**
+   * Combines LinqlLambda bodies with a binary AND.  Assumes there's only a single Lambda in each search.
+   * @param CombineSearch 
+   * @param FlattenTopLevelFunctions 
+   * @returns 
+   */
+    CombineAnd(CombineSearch: LinqlSearch, FlattenTopLevelFunctions: boolean = false)
+    {
+        return this.Combine(CombineSearch, FlattenTopLevelFunctions, "And");
+    }
+
+    /**
+     * Combines LinqlLambda bodies with a binary OR.  Assumes there's only a single Lambda in each search.
+     * @param CombineSearch 
+     * @param FlattenTopLevelFunctions 
+     * @returns 
+     */
+    CombineOr(CombineSearch: LinqlSearch, FlattenTopLevelFunctions: boolean = false)
+    {
+        return this.Combine(CombineSearch, FlattenTopLevelFunctions, "Or");
+    }
+
+
+    /**
+     * Combines LinqlLambda bodies with a binary defined by Combiner.  Assumes there's only a single Lambda in each search.
+     * @param CombineSearch 
+     * @param FlattenTopLevelFunctions 
+     * @param Combiner 
+     */
+    Combine(CombineSearch: LinqlSearch, FlattenTopLevelFunctions: boolean = false, Combiner: "And" | "Or")
+    {
+        const search = this.Copy();
+
+        let baseExpression: LinqlExpression | undefined;
+        let mergeExpression: LinqlExpression | undefined;
+        if (!FlattenTopLevelFunctions)
+        {
+            baseExpression = search.Expressions?.LastOrDefault()?.GetLastExpressionInNextChain();
+            mergeExpression = CombineSearch.Expressions?.LastOrDefault()?.GetLastExpressionInNextChain();
+        }
+        else
+        {
+            mergeExpression = search.Expressions?.slice(1).FirstOrDefault();
+            baseExpression = CombineSearch.Expressions?.slice(1).FirstOrDefault();
+        }
+
+        if (baseExpression && mergeExpression && LinqlLambda.isLinqlLambda(baseExpression) && LinqlLambda.isLinqlLambda(mergeExpression))
+        {
+            const body1 = baseExpression.Body;
+            const body2 = mergeExpression.Body;
+            const binary = new LinqlBinary(Combiner, body1, body2);
+            baseExpression.Body = binary;
+        }
+
+        return search;
+    }
 
     public CustomLinqlFunction<S>(FunctionName: string, Expression: AnyExpression<T> | string | undefined = undefined): ALinqlSearch<S>
     {
