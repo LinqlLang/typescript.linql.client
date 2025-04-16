@@ -81,8 +81,8 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
         }
         else
         {
-            mergeExpression = search.Expressions?.slice(1).FirstOrDefault();
-            baseExpression = CombineSearch.Expressions?.slice(1).FirstOrDefault();
+            baseExpression = search.Expressions?.slice(1).FirstOrDefault();
+            mergeExpression = CombineSearch.Expressions?.slice(1).FirstOrDefault();
         }
 
         if (baseExpression && mergeExpression && LinqlFunction.isLinqlFunction(baseExpression) && LinqlFunction.isLinqlFunction(mergeExpression))
