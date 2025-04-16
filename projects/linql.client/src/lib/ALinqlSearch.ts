@@ -85,12 +85,20 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
             baseExpression = CombineSearch.Expressions?.slice(1).FirstOrDefault();
         }
 
-        if (baseExpression && mergeExpression && LinqlLambda.isLinqlLambda(baseExpression) && LinqlLambda.isLinqlLambda(mergeExpression))
+        if (baseExpression && mergeExpression && LinqlFunction.isLinqlFunction(baseExpression) && LinqlFunction.isLinqlFunction(mergeExpression))
         {
-            const body1 = baseExpression.Body;
-            const body2 = mergeExpression.Body;
-            const binary = new LinqlBinary(Combiner, body1, body2);
-            baseExpression.Body = binary;
+            const arg1 = baseExpression.Arguments?.FirstOrDefault();
+            const arg2 = mergeExpression.Arguments?.FirstOrDefault();
+
+            if (arg1 && arg2 && LinqlLambda.isLinqlLambda(arg1) && LinqlLambda.isLinqlLambda(arg2))
+            {
+                const body1 = arg1.Body
+                const body2 = arg2.Body;
+                const binary = new LinqlBinary(Combiner, body1, body2);
+                baseExpression.Arguments = [binary];
+            }
+
+
         }
 
         return search;
