@@ -95,7 +95,7 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
                 const body1 = arg1.Body
                 const body2 = arg2.Body;
                 const binary = new LinqlBinary(Combiner, body1, body2);
-                baseExpression.Arguments = [binary];
+                arg1.Body = binary;
             }
 
 
