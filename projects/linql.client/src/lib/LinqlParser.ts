@@ -479,6 +479,7 @@ export class LinqlParser
         });
 
         this.AttachToExpression(aType);
+        this.PushToStack(aType, Node);
     }
 
 }
