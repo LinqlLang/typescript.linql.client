@@ -82,6 +82,13 @@ class TestClass
         await this._ExecuteTest("EmptySearch", newSearch);
     }
 
+    async AnonymousObject()
+    {
+        const search = this.context.Set<DataModel>(DataModel);
+        const newSearch = search.Select(r => { return { Property1: r.Boolean, Property2: r.Decimal } });
+        await this._ExecuteTest("AnonymousObject", newSearch);
+    }
+
     async SimpleConstant()
     {
         const search = this.context.Set<DataModel>(DataModel);

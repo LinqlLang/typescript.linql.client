@@ -1,7 +1,7 @@
-import { Node as AcornNode, parse } from 'acorn';
+import { Node as AcornNode, parse, ReturnStatement } from 'acorn';
 import * as AcornWalk from 'acorn-walk';
 import * as ESTree from 'estree';
-import { AnyExpression, LinqlBinary, LinqlConstant, LinqlExpression, LinqlFunction, LinqlLambda, LinqlObject, LinqlParameter, LinqlProperty, LinqlType, LinqlUnary, ITypeNameProvider } from "linql.core";
+import { AnyExpression, LinqlBinary, LinqlConstant, LinqlExpression, LinqlFunction, LinqlLambda, LinqlObject, LinqlParameter, LinqlProperty, LinqlType, LinqlUnary, ITypeNameProvider, LinqlAnonymousObject } from "linql.core";
 
 export const BinaryMap: Map<ESTree.LogicalOperator | ESTree.BinaryOperator, string> = new Map(
     [
@@ -138,7 +138,19 @@ export class LinqlParser
             ThisExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
             {
                 State.VisitThis(Node, Callback);
-            }
+            },
+            ReturnStatement(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            {
+                const returnStatement = Node as ReturnStatement;
+                if (returnStatement.argument)
+                {
+                    Callback(returnStatement.argument, State);
+                }
+            },
+            ObjectExpression(Node: AcornNode, State: LinqlParser, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+            {
+                State.VisitAnonymousObject(Node, Callback);
+            },
 
         });
     }
@@ -449,5 +461,24 @@ export class LinqlParser
         }
     }
 
+    VisitAnonymousObject(Node: AcornNode, Callback: AcornWalk.WalkerCallback<LinqlParser>)
+    {
+        const cast = Node as any as ESTree.ObjectExpression;
+        const aType = new LinqlAnonymousObject();
+
+        cast.properties.forEach(r => 
+        {
+            const prop = r as any as ESTree.Property;
+            const key = prop.key as any as ESTree.Identifier;
+            const valueParser = new LinqlParser(prop.value as AcornNode, this.ArgumentContext, this.TypeNameProvider);
+
+            if (valueParser.Root)
+            {
+                aType.AddProperty(key.name, valueParser.Root);
+            }
+        });
+
+        this.AttachToExpression(aType);
+    }
 
 }
