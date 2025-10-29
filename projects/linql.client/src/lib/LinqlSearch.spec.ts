@@ -1,8 +1,8 @@
-import { LinqlSearch } from "./LinqlSearch";
+import { INullable, LinqlObject, LinqlType } from "linql.core";
 import { ALinqlContext, LinqlSearchConstructor } from "./ALinqlSearch";
 import { LinqlContext } from "./LinqlContext";
+import { LinqlSearch } from "./LinqlSearch";
 import { TestFileLoader } from "./test/TestfileLoader";
-import { LinqlObject, LinqlType, INullable } from "linql.core";
 
 class DataModel
 {
@@ -49,6 +49,8 @@ class TestClass
     objectTest: LinqlObject<DataModel>;
     //#endregion
 
+    search2!: LinqlSearch<DataModel>;
+
     constructor()
     {
         const testData = this._CreateDataModel();
@@ -82,6 +84,15 @@ class TestClass
         await this._ExecuteTest("EmptySearch", newSearch);
     }
 
+    async MultipleQueries()
+    {
+        const search = this.context.Set<DataModel>(DataModel);
+        this.search2 = this.context.Set<DataModel>(DataModel, { this: this });
+        const newSearch = search.Where(r => (this.search2.Select(s => s.Integer) as any as Array<number>).Contains(r.Integer));
+        await this._ExecuteTest("MultipleQueries", newSearch);
+    }
+
+
     async AnonymousObject()
     {
         const search = this.context.Set<DataModel>(DataModel);
@@ -93,7 +104,6 @@ class TestClass
     {
         const search = this.context.Set<DataModel>(DataModel);
         const newSearch = search.Select(r => { return { Property1: r.Boolean, Property2: r.Decimal }.Property1 });
-        debugger;
         await this._ExecuteTest("AnonymousObjectChained", newSearch);
     }
 
@@ -246,7 +256,7 @@ class TestClass
     {
         this.integers = [1, 2, 3];
         const search = this.context.Set<DataModel>(DataModel);
-        const newSearch = search.Where(r => this.integers.Count === 1);
+        const newSearch = search.Where(r => this.integers.Count() === 1);
         await this._ExecuteTest("List_Int_Count", newSearch);
     }
 

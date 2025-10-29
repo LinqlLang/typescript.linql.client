@@ -1,7 +1,7 @@
 import { Node as AcornNode, parse, ReturnStatement } from 'acorn';
 import * as AcornWalk from 'acorn-walk';
 import * as ESTree from 'estree';
-import { AnyExpression, LinqlBinary, LinqlConstant, LinqlExpression, LinqlFunction, LinqlLambda, LinqlObject, LinqlParameter, LinqlProperty, LinqlType, LinqlUnary, ITypeNameProvider, LinqlAnonymousObject } from "linql.core";
+import { AnyExpression, ITypeNameProvider, LinqlAnonymousObject, LinqlBinary, LinqlConstant, LinqlExpression, LinqlFunction, LinqlLambda, LinqlObject, LinqlParameter, LinqlProperty, LinqlSearch, LinqlType, LinqlUnary } from "linql.core";
 
 export const BinaryMap: Map<ESTree.LogicalOperator | ESTree.BinaryOperator, string> = new Map(
     [
@@ -292,6 +292,15 @@ export class LinqlParser
                     if (value instanceof LinqlObject)
                     {
                         expression = value;
+                    }
+                    else if (value instanceof LinqlSearch)
+                    {
+                        const clonedSearch = value.Clone();
+                        if (clonedSearch)
+                        {
+                            clonedSearch.Expressions = undefined;
+                        }
+                        expression = clonedSearch;
                     }
                     else
                     {
