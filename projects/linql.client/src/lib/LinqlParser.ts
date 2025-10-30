@@ -296,10 +296,6 @@ export class LinqlParser
                     else if (value instanceof LinqlSearch)
                     {
                         const clonedSearch = value.Clone();
-                        if (clonedSearch)
-                        {
-                            clonedSearch.Expressions = undefined;
-                        }
                         expression = clonedSearch;
                     }
                     else
