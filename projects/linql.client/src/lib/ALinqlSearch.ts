@@ -142,9 +142,9 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
         return this.CustomLinqlFunction<T>("Where", Expression) as this;
     }
 
-    public Distinct()
+    public Distinct(): this
     {
-        return this.CustomLinqlFunction<T>("Distinct", undefined);
+        return this.CustomLinqlFunction<T>("Distinct", undefined) as this;
     }
 
     public Select<S>(Expression: TransformExpression<T, S> | string)
