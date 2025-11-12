@@ -192,6 +192,13 @@ class TestClass
         await this._ExecuteTest("NullableHasValue", newSearch);
     }
 
+    async NullableCheck()
+    {
+        const search = this.context.Set<DataModel>(DataModel);
+        const newSearch = search.Where(r => (r.OneToOneNullable.Integer as any as INullable<number>).HasValue);
+        await this._ExecuteTest("NullableCheck", newSearch);
+    }
+
     async NullableHasValueReversed()
     {
         const search = this.context.Set<DataModel>(DataModel);
