@@ -1,4 +1,4 @@
-import { AnyExpression, BooleanExpression, GenericConstructor, IGrouping, LinqlConstant, LinqlExpression, LinqlFunction, LinqlSearch, LinqlType, TransformExpression, ITypeNameProvider, LinqlBinary, LinqlLambda } from "linql.core";
+import { AnyExpression, BooleanExpression, GenericConstructor, IGrouping, LinqlConstant, LinqlExpression, LinqlFunction, LinqlSearch, LinqlType, TransformExpression, ITypeNameProvider, LinqlBinary, LinqlLambda, OneToManyExpressionProject } from "linql.core";
 // import { OrderedLinqlSearch } from "./AOrderedLinqlSearch";
 import { LinqlParser } from "./LinqlParser";
 import { constructorType } from "./LinqlConstructorType";
@@ -157,7 +157,7 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
         return this.CustomLinqlFunction<T>("Include", Expression) as this;
     }
 
-    public SelectMany<S>(Expression: TransformExpression<T, S> | string)
+    public SelectMany<S>(Expression: OneToManyExpressionProject<T, S> | string)
     {
         return this.CustomLinqlFunction<S>("SelectMany", Expression);
     }
