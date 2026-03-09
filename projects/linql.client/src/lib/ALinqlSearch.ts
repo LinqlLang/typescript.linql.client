@@ -39,6 +39,11 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
 
     abstract Copy(): this;
 
+    public override Clone()
+    {
+        return this.Copy();
+    }
+
     /**
    * Combines LinqlLambda bodies with a binary AND.  Assumes there's only a single Lambda in each search.
    * @param CombineSearch 

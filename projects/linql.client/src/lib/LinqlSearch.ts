@@ -26,7 +26,5 @@ export class LinqlSearch<T> extends ALinqlSearch<T>
 
         return search as this;
     }
-
-
 }
 
