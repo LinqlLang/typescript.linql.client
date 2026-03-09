@@ -271,7 +271,8 @@ export class LinqlParser
                 break;
         }
 
-        Callback(node.object as AcornNode, this);
+        //have to cast after update
+        Callback(node.object as any, this);
         const previous = this.LinqlStack.at(-1);
 
         if (memberName)
@@ -356,7 +357,8 @@ export class LinqlParser
         {
             this.AttachToExpression(unary);
             this.PushToStack(unary, Node);
-            Callback(node.argument as AcornNode, this);
+            //have to cast after update
+            Callback(node.argument as any, this);
         }
         else
         {
