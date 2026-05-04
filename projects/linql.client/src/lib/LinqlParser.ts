@@ -184,7 +184,9 @@ export class LinqlParser
     {
         const cast = Node as any as ESTree.Literal;
         const value = cast.value;
-        const type = LinqlType.GetLinqlType(value, this.TypeNameProvider);
+        const typeValue = value ?? "";
+
+        const type = LinqlType.GetLinqlType(typeValue, this.TypeNameProvider);
         const constant = new LinqlConstant(type, value);
         this.AttachToExpression(constant);
         this.PushToStack(constant, Node);
