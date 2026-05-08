@@ -109,6 +109,28 @@ export abstract class ALinqlSearch<T> extends LinqlSearch
         return search;
     }
 
+    /**
+     * Concats two lambda requests by appending the expressions of the ConcatSearch to the base search.  Returns a new search.
+     * @param ConcatSearch 
+     */
+    ConcatSearch(ConcatSearch: LinqlSearch)
+    {
+        const search = this.Copy();
+        const concatSearch = ConcatSearch.Clone();
+        const expressionsToConcat = concatSearch.Expressions?.slice(1);
+
+        if (!search.Expressions)
+        {
+            search.Expressions = [];
+        }
+
+        if (expressionsToConcat)
+        {
+            search.Expressions!.push(...expressionsToConcat)
+        }
+        return search;
+    }
+
     public CustomLinqlFunction<S>(FunctionName: string, Expression: AnyExpression<T> | string | undefined = undefined): ALinqlSearch<S>
     {
         const customFunction = new LinqlFunction(FunctionName);
